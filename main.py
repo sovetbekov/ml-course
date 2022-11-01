@@ -2,35 +2,35 @@ import math
 import random
 
 glob_word_dict = {}
-array_doc_word = []
-NUM_OF_DOC = 10
-NUM_OF_CENTROID = 3
-NUM_OF_ITERATION = 100
+array_doc_term = []
+num_of_doc = 10
+num_of_centroid = 3
+num_of_iteration = 100
 
-count_doc_word = [0] * NUM_OF_DOC
-word_matrix = [[]] * NUM_OF_DOC
-centroid_array = [[]] * NUM_OF_CENTROID
-doc_cluster = [-1] * NUM_OF_DOC
+count_doc_term = [0] * num_of_doc
+term_matrix = [[]] * num_of_doc
+centroid_array = [[]] * num_of_centroid
+doc_cluster = [-1] * num_of_doc
 
 
 def main():
-    insert_doc_words()
-    count_doc_words()
-    print(array_doc_word)
+    insert_doc_terms()
+    count_doc_terms()
+    print(array_doc_term)
     set_matrix()
-    calculate_matrix()
+    calc_matrix()
     normalize_matrix()
-    calculate_centroid()
+    calc_centroid()
 
 
-def calculate_distance(centroid: [int], doc_matrix: [int]):
+def calc_distance(centroid: [int], doc_matrix: [int]):
     distance_sq = 0
     for word_id in range(len(centroid)):
         distance_sq += (centroid[word_id] - doc_matrix[word_id])**2
     return math.sqrt(distance_sq)
 
 
-def calculate_avg_centroid_distance(doc_array: [int]) -> ([int], bool):
+def calc_avg_centroid_distance(doc_array: [int]) -> ([int], bool):
     if len(doc_array) == 0:
         # return centroid_array[centroid_id]
         return [], False
@@ -39,7 +39,7 @@ def calculate_avg_centroid_distance(doc_array: [int]) -> ([int], bool):
 
     for doc_id in doc_array:
         for word_id in range(len(glob_word_dict)):
-            new_centroid[word_id] += word_matrix[doc_id][word_id]
+            new_centroid[word_id] += term_matrix[doc_id][word_id]
 
     for word_id in range(len(new_centroid)):
         new_centroid[word_id] /= len(doc_array)
@@ -47,46 +47,47 @@ def calculate_avg_centroid_distance(doc_array: [int]) -> ([int], bool):
     return new_centroid, True
 
 
-def calculate_cluster():
+def calc_cluster():
     cluster_doc_array = []
-    for _ in range(NUM_OF_CENTROID):
+    for _ in range(num_of_centroid):
         cluster_doc_array.append([])
 
-    for doc_id in range(NUM_OF_DOC):
+    for doc_id in range(num_of_doc):
         cluster_doc_array[doc_cluster[doc_id]].append(doc_id)
 
-    for centroid_id in range(NUM_OF_CENTROID):
+    for centroid_id in range(num_of_centroid):
         centroid_array[centroid_id], is_good = \
-            calculate_avg_centroid_distance(cluster_doc_array[centroid_id])
+            calc_avg_centroid_distance(cluster_doc_array[centroid_id])
         if not is_good:
-            for cluster_id in range(NUM_OF_CENTROID):
-                centroid_array[cluster_id] = create_rand_centroid()
+            for cluster_id in range(num_of_centroid):
+                centroid_array[cluster_id] = randomize_centroid()
             break
-    calculate_doc_near_centroid()
+    calc_doc_near_centroid()
 
 
-def calculate_doc_near_centroid():
-    for doc_id in range(NUM_OF_DOC):
+def calc_doc_near_centroid():
+    for doc_id in range(num_of_doc):
         doc_distance = 1000000
-        for j in range(NUM_OF_CENTROID):
-            sample_distance = calculate_distance(centroid_array[j], word_matrix[doc_id])
+        for j in range(num_of_centroid):
+            sample_distance = calc_distance(centroid_array[j], term_matrix[doc_id])
             if doc_distance > sample_distance:
                 doc_distance = sample_distance
                 doc_cluster[doc_id] = j
 
 
-def calculate_centroid():
-    for centroid_id in range(NUM_OF_CENTROID):
-        centroid_array[centroid_id] = create_rand_centroid()
+def calc_centroid():
+    for centroid_id in range(num_of_centroid):
+        centroid_array[centroid_id] = randomize_centroid()
 
-    calculate_doc_near_centroid()
+
+    calc_doc_near_centroid()
     print(doc_cluster)
-    for i in range(NUM_OF_ITERATION):
-        calculate_cluster()
+    for i in range(num_of_iteration):
+        calc_cluster()
         print(doc_cluster)
 
 
-def create_rand_centroid() -> [int]:
+def randomize_centroid() -> [int]:
     centroid = [0.0] * len(glob_word_dict)
     for word_id in range(len(glob_word_dict)):
         centroid[word_id] = random.random()
@@ -96,38 +97,38 @@ def create_rand_centroid() -> [int]:
 def normalize_matrix():
     max_matrix_val = 0
     for word_id in range(len(glob_word_dict)):
-        for doc_id in range(NUM_OF_DOC):
-            if word_matrix[doc_id][word_id] > max_matrix_val:
-                max_matrix_val = word_matrix[doc_id][word_id]
+        for doc_id in range(num_of_doc):
+            if term_matrix[doc_id][word_id] > max_matrix_val:
+                max_matrix_val = term_matrix[doc_id][word_id]
 
     for word_id in range(len(glob_word_dict)):
-        for doc_id in range(NUM_OF_DOC):
-            word_matrix[doc_id][word_id] *= 1 / max_matrix_val
+        for doc_id in range(num_of_doc):
+            term_matrix[doc_id][word_id] *= 1 / max_matrix_val
 
 
-def calculate_matrix():
+def calc_matrix():
     words = list(glob_word_dict.keys())
     for word_id in range(len(words)):
-        for doc_id in range(NUM_OF_DOC):
-            word_matrix[doc_id][word_id] = \
+        for doc_id in range(num_of_doc):
+            term_matrix[doc_id][word_id] = \
                 calcTF(words[word_id], doc_id) * calcIDF(words[word_id])
 
 
 def set_matrix():
-    for doc_id in range(NUM_OF_DOC):
-        word_matrix[doc_id] = [0] * len(glob_word_dict)
+    for doc_id in range(num_of_doc):
+        term_matrix[doc_id] = [0] * len(glob_word_dict)
 
 
-def insert_doc_words():
-    for number in range(NUM_OF_DOC):
+def insert_doc_terms():
+    for number in range(num_of_doc):
         sample_dict = get_doc_dict(f"task_1//text_{number + 1}.txt")
-        array_doc_word.append(sample_dict)
+        array_doc_term.append(sample_dict)
         insert_doc_dict(sample_dict)
 
 
-def count_doc_words():
-    for doc_id in range(NUM_OF_DOC):
-        count_doc_word[doc_id] = count_words(array_doc_word[doc_id])
+def count_doc_terms():
+    for doc_id in range(num_of_doc):
+        count_doc_term[doc_id] = count_words(array_doc_term[doc_id])
 
 
 def count_words(sample_dict: dict):
@@ -183,20 +184,20 @@ def check_word(word: str):
 
 def calcTF(word: str, doc_id: int):
     try:
-        return array_doc_word[doc_id][word] / count_doc_word[doc_id]
+        return array_doc_term[doc_id][word] / count_doc_term[doc_id]
     except (Exception,):
         return 0
 
 
 def calcIDF(word: str):
     count = 0
-    for doc_id in range(NUM_OF_DOC):
+    for doc_id in range(num_of_doc):
         try:
-            _ = array_doc_word[doc_id][word]
+            _ = array_doc_term[doc_id][word]
             count += 1
         except (Exception,):
             pass
-    return math.log(NUM_OF_DOC / count)
+    return math.log(num_of_doc / count)
 
 
 if __name__ == '__main__':
